@@ -1,73 +1,37 @@
-# PDFInsight | Document & Transaction Analyzer
+# PDFInsight
 
-**A Python-based document analysis and transaction auditing tool that extracts information from PDFs, analyzes structured data, identifies potential anomalies, and generates insightful reports through an interactive web dashboard.**
+A Python-based web application for PDF extraction, document comparison, anomaly exploration, and CSV transaction analytics.
 
-PDFInsight is designed to simplify document analysis and financial transaction auditing by combining PDF extraction, tabular data processing, CSV analytics, anomaly detection, and data visualization in one application.
+## Features
 
----
+- **PDF Text Extraction:** Extract text from PDF documents using `pdfplumber`.
+- **PDF Analysis:** Analyze extracted information and numerical data.
+- **Document Comparison:** Compare documents to explore differences.
+- **Anomaly Exploration:** Identify duplicate values and potentially unusual numerical patterns.
+- **CSV Analytics:** Process transaction datasets using Pandas.
+- **Interactive Dashboard:** Visualize daily transactions, transaction types, and top merchants using Chart.js.
+- **Excel Reports:** Export analysis results to Excel where supported.
 
-## 🚀 Key Features
+## Tech Stack
 
-### 📄 PDF Document Analysis
-- Extract text from PDF documents.
-- Extract tables from supported PDF files.
-- Convert extracted tables into structured Pandas DataFrames.
-- Organize document data for further analysis.
+- Python
+- Flask
+- Pandas
+- pdfplumber
+- OpenPyXL
+- HTML
+- CSS
+- JavaScript
+- Chart.js
+- Gunicorn
 
-### 📊 CSV Transaction Analyzer
-- Upload and analyze transaction CSV files.
-- Calculate total transaction amount and transaction count.
-- Identify minimum and maximum transaction values.
-- Summarize transaction types and merchant activity.
-- Analyze daily transaction amounts.
-- Detect missing values and duplicate records.
-- Process large CSV files using chunk-based reading.
-
-### 🔍 Data Comparison & Anomaly Detection
-- Compare structured datasets and identify differences.
-- Detect duplicate records.
-- Flag unusual numerical values for further investigation.
-- Highlight potential data quality issues.
-
-*Note: Unusual values are potential anomalies, not necessarily fraudulent transactions.*
-
-### 📈 Interactive Dashboard
-- Visualize daily transaction amounts using a line chart.
-- Explore transaction-type distribution using a doughnut chart.
-- View top merchants using a bar chart.
-- Review merchant summaries and transaction statistics.
-- Filter transaction analysis by date range and transaction type.
-
-### 📑 Report Generation
-- Generate downloadable analysis and audit reports.
-- Export findings for documentation and further review.
-- Organize reports for easier auditing and record-keeping.
-
----
-
-## 🛠️ Technology Stack
-
-| Technology | Purpose |
-|---|---|
-| Python | Core programming language |
-| Flask | Backend web framework and routing |
-| Pandas | Data processing and DataFrame operations |
-| pdfplumber | PDF text and table extraction |
-| Chart.js | Interactive dashboard charts |
-| HTML5 | Web page structure |
-| CSS3 | Dashboard styling |
-| Jinja2 | Dynamic HTML rendering through Flask |
-| Git & GitHub | Version control and project hosting |
-
----
-
-## 🏗️ Project Architecture
+## Project Structure
 
 ```text
 PDFInsight/
-│
 ├── app.py
-│
+├── requirements.txt
+├── README.md
 ├── backend/
 │   ├── extractor.py
 │   ├── analyzer.py
@@ -75,147 +39,81 @@ PDFInsight/
 │   ├── anomalies.py
 │   ├── reporting.py
 │   └── csv_analyzer.py
-│
 ├── templates/
 │   └── index.html
-│
-├── static/
-│   └── style.css
-│
-├── uploads/
-├── reports/
-│
-├── requirements.txt
-├── .gitignore
-└── README.md
+└── static/
+    └── style.css
 ```
 
-### Module Overview
+## Installation
 
-| File | Responsibility |
-|---|---|
-| `app.py` | Flask application, upload handling, routes, filters, and integration of analysis modules |
-| `extractor.py` | Extracts text and tables from PDF documents |
-| `analyzer.py` | Converts extracted tables into structured DataFrames |
-| `comparison.py` | Compares datasets and identifies differences |
-| `anomalies.py` | Detects duplicate records and unusual numerical values |
-| `reporting.py` | Exports analysis findings into reports |
-| `csv_analyzer.py` | Analyzes CSV transactions, aggregates statistics, and prepares chart data |
-| `index.html` | Provides the main user interface and dashboard |
-| `style.css` | Defines layout, styling, and responsive presentation |
-| `uploads/` | Stores uploaded files during processing |
-| `reports/` | Stores generated reports |
-
----
-
-## ⚙️ How It Works
-
-PDFInsight follows a modular data-processing pipeline.
-
-1. **Upload:** The user uploads a PDF document or transaction CSV file through the web interface.
-2. **Validation:** The Flask backend receives the file and checks the upload requirements.
-3. **Extraction:** For PDFs, the extraction module retrieves text and tables.
-4. **Transformation:** Extracted tables and CSV records are converted into structured data for analysis.
-5. **Analysis:** The application calculates transaction statistics, compares datasets, checks data quality, and identifies potential anomalies.
-6. **Visualization:** Aggregated results are displayed through interactive Chart.js visualizations.
-7. **Reporting:** The reporting module exports findings for download and further review.
-
-### CSV Processing Approach
-
-The CSV analyzer uses Pandas chunk-based reading with a chunk size of 100,000 rows. This allows the application to process large CSV files incrementally instead of loading the entire dataset into memory at once.
-
-The analyzer also attempts to identify relevant columns, such as amount, date, transaction type, and merchant, using column names. Actual results depend on the structure and quality of the uploaded data.
-
----
-
-## 📦 Installation & Setup
-
-### Prerequisites
-
-- Python 3.10 or later recommended.
-- pip package manager.
-- Git (optional, for cloning the repository).
-
-### 1. Clone the Repository
+### 1. Clone the repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/PDFInsight.git
+git clone YOUR_GITHUB_REPOSITORY_URL
 cd PDFInsight
 ```
 
-Replace `YOUR-USERNAME` with your GitHub username and `PDFInsight` with your actual repository name if different.
-
-### 2. Create a Virtual Environment
-
-**Windows:**
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
 ```
 
-**macOS/Linux:**
+### 3. Activate the environment
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
+Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
-### 3. Install Dependencies
+### 4. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Ensure that `requirements.txt` contains all the external packages used by your project.
-
-### 4. Run the Application
+### 5. Run the application
 
 ```bash
 python app.py
 ```
 
-Open the local URL printed by Flask in your terminal, typically:
+Open the local URL shown in your terminal, usually:
 
-```text
-http://127.0.0.1:5000
+`http://127.0.0.1:5000`
+
+## Deployment
+
+The application can be deployed to a compatible Python hosting platform such as Render.
+
+Example production start command:
+
+```bash
+gunicorn app:app
 ```
 
----
+This assumes the Flask application instance is named `app` inside `app.py`.
 
-## 🧪 Testing the Application
+## Security Notes
 
-After launching the application:
+- Do not upload confidential documents or sensitive financial data to an untrusted server.
+- Never commit credentials, private datasets, or environment files to GitHub.
+- Unusual values are not necessarily fraudulent; this project provides data analysis rather than validated fraud detection.
 
-1. Upload a supported PDF file and test text extraction.
-2. Upload a PDF containing tables and inspect the extracted data.
-3. Upload a transaction CSV file with appropriate date, amount, merchant, and transaction-type columns.
-4. Review the calculated statistics and dashboard charts.
-5. Apply the available date and transaction-type filters.
-6. Check the duplicate-record and unusual-value results.
-7. Generate and download an available report.
+## Future Improvements
 
-For reliable results, use files with valid formats and clearly identifiable column names.
+- Enhanced PDF table extraction.
+- More document comparison options.
+- Additional data visualizations.
+- Improved error handling for large files.
+- Persistent storage and user authentication.
 
----
+## License
 
-## 📂 Dataset
-
-PDFInsight is designed to analyze user-provided PDF documents and transaction CSV files.
-
-A transaction dataset, including a Kaggle-sourced dataset during development, was used for testing the CSV analysis workflow.
-
-The application is not limited to one fixed dataset; compatibility depends on the input schema and supported file formats.
-
-If you redistribute a dataset with this project, include its original source and comply with its licensing and usage terms. Do not commit confidential transaction data or personally identifiable information.
+A license can be added when the project’s distribution and reuse terms are decided.
 
 ---
 
-## 🔐 Security & Data Handling
-
-- The application uses a configured maximum upload size of **20 MB**.
-- Uploaded files and generated reports are handled through dedicated directories.
-- A production deployment should validate file extensions and content, generate safe filenames, restrict access to uploaded data, and clean up temporary files.
-- Sensitive financial information should not be uploaded to a publicly accessible deployment.
-
-**Important:** A file-size limit
+**PDFInsight — Built with Python and Flask.**
