@@ -1,0 +1,974 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PDFInsight | Document & Transaction Analyzer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<header class="topbar">
+    <div class="brand">PDF<span>Insight</span></div>
+    <div class="status">Document &amp; Transaction Workspace</div>
+</header>
+
+<main class="container">
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <p class="eyebrow">DOCUMENT INTELLIGENCE WORKSPACE</p>
+
+        <h1>
+            Analyze documents.<br>
+            Understand your data.
+        </h1>
+
+        <p class="muted">
+            Extract PDF content, analyze tables, compare documents
+            and explore transaction data through visual analytics.
+        </p>
+    </section>
+
+
+    <!-- FLASH MESSAGES -->
+    {% if error %}
+    <div class="alert error">
+        <strong>Error:</strong> {{ error }}
+    </div>
+    {% endif %}
+
+    {% if message %}
+    <div class="alert success">
+        {{ message }}
+    </div>
+    {% endif %}
+
+
+    <!-- =====================================================
+         01. PDF TEXT EXTRACTION
+    ====================================================== -->
+    <section class="panel">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">01 / DOCUMENT PROCESSING</p>
+                <h2>Extract PDF Text</h2>
+                <p class="muted">
+                    Extract readable text from an uploaded PDF document.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('home') }}"
+              enctype="multipart/form-data"
+              class="upload-form">
+
+            <input type="hidden" name="action" value="extract">
+
+            <label for="extractPdf">Choose PDF file</label>
+
+            <input type="file"
+                   id="extractPdf"
+                   name="pdf_file"
+                   accept=".pdf,application/pdf"
+                   required>
+
+            <button type="submit">Extract Text</button>
+        </form>
+
+        {% if extracted_pages %}
+        <div class="result-block">
+            <h3>Extracted Content</h3>
+
+            {% for page in extracted_pages %}
+            <details class="page-item" {% if loop.first %}open{% endif %}>
+                <summary>Page {{ loop.index }}</summary>
+                <pre class="text-output">{{ page }}</pre>
+            </details>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         02. PDF TABLE ANALYSIS
+    ====================================================== -->
+    <section class="panel">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">02 / DATA EXTRACTION</p>
+                <h2>PDF Table Analysis</h2>
+                <p class="muted">
+                    Extract a table and inspect duplicate records
+                    and unusual numeric values.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('home') }}"
+              enctype="multipart/form-data"
+              class="upload-form">
+
+            <input type="hidden" name="action" value="analyze">
+
+            <label for="analyzePdf">Choose PDF file</label>
+
+            <input type="file"
+                   id="analyzePdf"
+                   name="pdf_file"
+                   accept=".pdf,application/pdf"
+                   required>
+
+            <button type="submit">Analyze PDF Tables</button>
+        </form>
+
+        {% if results and results.get('table') %}
+        <div class="result-block">
+            <h3>Extracted Table</h3>
+
+            <div class="table-wrapper">
+                {{ results.get('table') | safe }}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if results and results.get('duplicates') %}
+        <div class="result-block">
+            <h3>Duplicate Records</h3>
+            <p class="muted">
+                Duplicate rows identified in the extracted table.
+            </p>
+
+            <div class="table-wrapper">
+                {{ results.get('duplicates') | safe }}
+            </div>
+
+            {% if results.get('duplicate_count') is not none %}
+            <p class="muted">
+                Duplicate rows: {{ results.get('duplicate_count') }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if results and results.get('unusual') %}
+        <div class="result-block">
+            <h3>Unusual Numeric Values</h3>
+            <p class="muted">
+                Numeric values flagged by the analysis.
+            </p>
+
+            <div class="table-wrapper">
+                {{ results.get('unusual') | safe }}
+            </div>
+
+            {% if results.get('unusual_count') is not none %}
+            <p class="muted">
+                Unusual values flagged: {{ results.get('unusual_count') }}
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         03. CSV TRANSACTION ANALYSIS
+    ====================================================== -->
+    <section class="panel">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">03 / TRANSACTION ANALYTICS</p>
+                <h2>CSV Transaction Analyzer</h2>
+                <p class="muted">
+                    Analyze transaction amounts, dates, transaction types
+                    and merchant activity.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('home') }}"
+              enctype="multipart/form-data"
+              class="upload-form">
+
+            <input type="hidden" name="action" value="csv_analyze">
+
+            <label for="transactionCsv">Choose transaction CSV</label>
+
+            <input type="file"
+                   id="transactionCsv"
+                   name="csv_file"
+                   accept=".csv,text/csv"
+                   required>
+
+            <div class="filter-grid">
+
+                <div>
+                    <label for="startDate">Start date (optional)</label>
+
+                    <input type="date"
+                           id="startDate"
+                           name="start_date"
+                           value="{{ results.get('csv_analysis', {}).get('selected_start_date', '') if results else '' }}">
+                </div>
+
+                <div>
+                    <label for="endDate">End date (optional)</label>
+
+                    <input type="date"
+                           id="endDate"
+                           name="end_date"
+                           value="{{ results.get('csv_analysis', {}).get('selected_end_date', '') if results else '' }}">
+                </div>
+
+                <div>
+                    <label for="transactionType">Transaction type</label>
+
+                    <select id="transactionType" name="transaction_type">
+
+                        <option value="All"
+                            {% if not results or results.get('csv_analysis', {}).get('selected_transaction_type', 'All') == 'All' %}
+                            selected
+                            {% endif %}>
+                            All transaction types
+                        </option>
+
+                        {% if results and results.get('csv_analysis') %}
+                            {% for item in results.get('csv_analysis', {}).get('available_transaction_types', []) %}
+                            <option value="{{ item }}"
+                                {% if results.get('csv_analysis', {}).get('selected_transaction_type') == item %}
+                                selected
+                                {% endif %}>
+                                {{ item }}
+                            </option>
+                            {% endfor %}
+                        {% endif %}
+
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit">Analyze Transactions</button>
+
+        </form>
+
+
+        <!-- CSV RESULTS -->
+        {% if results and results.get('csv_analysis') %}
+
+        {% set csv = results.get('csv_analysis') %}
+
+        <!-- SUMMARY CARDS -->
+        <div class="result-block">
+
+            <div class="section-heading">
+                <div>
+                    <h3>Transaction Overview</h3>
+                    <p class="muted">
+                        Summary of the selected transaction data.
+                    </p>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Total Transactions</span>
+                    <strong>{{ "{:,}".format(csv.get('total_rows', 0)) }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Total Amount</span>
+                    <strong>
+                        {{ "{:,.2f}".format(csv.get('total_amount', 0) or 0) }}
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Average Amount</span>
+                    <strong>
+                        {% if csv.get('average_amount') is not none %}
+                            {{ "{:,.2f}".format(csv.get('average_amount')) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Duplicate Rows</span>
+                    <strong>{{ "{:,}".format(csv.get('duplicate_rows', 0)) }}</strong>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- CHARTS -->
+        <div class="charts-grid">
+
+            <!-- DAILY AMOUNT CHART -->
+            <div class="chart-card">
+
+                <h3>Daily Transaction Amount</h3>
+
+                <p class="muted">
+                    Total transaction amount grouped by date.
+                </p>
+
+                <div class="chart-container">
+                    <canvas id="dailyChart"></canvas>
+                </div>
+
+                {% if not csv.get('daily_chart_labels') %}
+                <p class="muted chart-empty-message">
+                    No valid date and amount data available for this chart.
+                </p>
+                {% endif %}
+
+            </div>
+
+
+            <!-- TRANSACTION TYPE CHART -->
+            <div class="chart-card">
+
+                <h3>Transaction Type Breakdown</h3>
+
+                <p class="muted">
+                    Distribution of transaction types.
+                </p>
+
+                <div class="chart-container">
+                    <canvas id="transactionTypeChart"></canvas>
+                </div>
+
+                {% if not csv.get('type_chart_labels') %}
+                <p class="muted chart-empty-message">
+                    No transaction type data available.
+                </p>
+                {% endif %}
+
+            </div>
+
+
+            <!-- MERCHANT CHART -->
+            <div class="chart-card chart-card-wide">
+
+                <h3>Top 10 Merchants</h3>
+
+                <p class="muted">
+                    Merchants ranked by transaction count.
+                </p>
+
+                <div class="chart-container merchant-chart">
+                    <canvas id="topMerchantsChart"></canvas>
+                </div>
+
+                {% if not csv.get('merchant_chart_labels') %}
+                <p class="muted chart-empty-message">
+                    No merchant data available. Check whether your CSV
+                    has a merchant or merchant_name column.
+                </p>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- AMOUNT RANGE -->
+        <div class="result-block">
+
+            <h3>Transaction Amount Range</h3>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Minimum Amount</span>
+                    <strong>
+                        {% if csv.get('min_amount') is not none %}
+                            {{ "{:,.2f}".format(csv.get('min_amount')) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Maximum Amount</span>
+                    <strong>
+                        {% if csv.get('max_amount') is not none %}
+                            {{ "{:,.2f}".format(csv.get('max_amount')) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Valid Amount Values</span>
+                    <strong>{{ "{:,}".format(csv.get('amount_count', 0)) }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Detected Date Column</span>
+                    <strong class="small-stat">
+                        {{ csv.get('date_column') or 'Not detected' }}
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- DATE RANGE -->
+        <div class="result-block">
+
+            <h3>Transaction Date Range</h3>
+
+            <div class="date-range-row">
+
+                <div>
+                    <span class="muted">First transaction date</span>
+                    <p>{{ csv.get('date_min') or 'N/A' }}</p>
+                </div>
+
+                <div>
+                    <span class="muted">Last transaction date</span>
+                    <p>{{ csv.get('date_max') or 'N/A' }}</p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TRANSACTION TYPE SUMMARY -->
+        <div class="result-block">
+
+            <h3>Transaction Type Summary</h3>
+
+            {% if csv.get('transaction_types') %}
+
+            <div class="table-wrapper">
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Transaction Type</th>
+                            <th>Transaction Count</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for name, count in csv.get('transaction_types', {}).items() %}
+                        <tr>
+                            <td>{{ name }}</td>
+                            <td>{{ "{:,}".format(count) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <p class="muted">
+                No transaction type column was detected in the CSV.
+            </p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- MERCHANT SUMMARY -->
+        <div class="result-block">
+
+            <h3>Merchant Summary</h3>
+
+            <p class="muted">
+                Top merchants ranked by the number of transactions.
+            </p>
+
+            {% if csv.get('top_merchants') %}
+
+            <div class="table-wrapper">
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Merchant</th>
+                            <th>Transaction Count</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for merchant, count in csv.get('top_merchants', {}).items() %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ merchant }}</td>
+                            <td>{{ "{:,}".format(count) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <p class="muted">
+                No merchant records were found. Check whether the CSV
+                contains a merchant or merchant_name column.
+            </p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- MISSING VALUES -->
+        <div class="result-block">
+
+            <h3>Missing Values by Column</h3>
+
+            {% if csv.get('missing_counts') %}
+
+            <div class="table-wrapper">
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Column</th>
+                            <th>Missing Values</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for column, count in csv.get('missing_counts', {}).items() %}
+                        <tr>
+                            <td>{{ column }}</td>
+                            <td>{{ "{:,}".format(count) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <p class="muted">No missing values were reported.</p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- DETECTED COLUMNS -->
+        <div class="result-block">
+
+            <h3>Detected CSV Columns</h3>
+
+            <div class="table-wrapper">
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Detected Column</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr>
+                            <td>Amount</td>
+                            <td>{{ csv.get('amount_column') or 'Not detected' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Date</td>
+                            <td>{{ csv.get('date_column') or 'Not detected' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Transaction Type</td>
+                            <td>{{ csv.get('type_column') or 'Not detected' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>Merchant</td>
+                            <td>{{ csv.get('merchant_column') or 'Not detected' }}</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         04. PDF COMPARISON
+    ====================================================== -->
+    <section class="panel">
+
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">04 / DOCUMENT COMPARISON</p>
+                <h2>Compare Two PDFs</h2>
+                <p class="muted">
+                    Compare table records between two PDF files
+                    using a unique key column.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST"
+              action="{{ url_for('home') }}"
+              enctype="multipart/form-data"
+              class="upload-form">
+
+            <input type="hidden" name="action" value="compare">
+
+            <label for="oldPdf">First / Older PDF</label>
+
+            <input type="file"
+                   id="oldPdf"
+                   name="old_pdf"
+                   accept=".pdf,application/pdf"
+                   required>
+
+            <label for="newPdf">Second / Newer PDF</label>
+
+            <input type="file"
+                   id="newPdf"
+                   name="new_pdf"
+                   accept=".pdf,application/pdf"
+                   required>
+
+            <label for="keyColumn">
+                Unique key column (e.g. StudentID)
+            </label>
+
+            <input type="text"
+                   id="keyColumn"
+                   name="key_column"
+                   placeholder="Enter the column name"
+                   required>
+
+            <button type="submit">Compare PDFs</button>
+
+        </form>
+
+
+        {% if results and results.get('added') is not none %}
+
+        <div class="result-block">
+
+            <h3>Comparison Summary</h3>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Added Records</span>
+                    <strong>{{ results.get('added_count', 0) }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Missing Records</span>
+                    <strong>{{ results.get('missing_count', 0) }}</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Changed Records</span>
+                    <strong>{{ results.get('changed_count', 0) }}</strong>
+                </div>
+
+            </div>
+
+            <div class="result-block">
+                <h3>Added Records</h3>
+                <div class="table-wrapper">
+                    {{ results.get('added', '') | safe }}
+                </div>
+            </div>
+
+            <div class="result-block">
+                <h3>Missing Records</h3>
+                <div class="table-wrapper">
+                    {{ results.get('missing', '') | safe }}
+                </div>
+            </div>
+
+            <div class="result-block">
+                <h3>Changed Records</h3>
+                <div class="table-wrapper">
+                    {{ results.get('changed', '') | safe }}
+                </div>
+            </div>
+
+        </div>
+
+        {% endif %}
+
+    </section>
+
+
+    <!-- =====================================================
+         05. EXCEL REPORT DOWNLOAD
+    ====================================================== -->
+    {% if report_ready %}
+
+    <section class="panel report-panel">
+
+        <div>
+            <p class="eyebrow">EXPORT RESULTS</p>
+            <h2>Your audit report is ready</h2>
+            <p class="muted">
+                Download the generated Excel audit report.
+            </p>
+        </div>
+
+        <a class="button-link"
+           href="{{ url_for('download_report') }}">
+            Download Excel Report
+        </a>
+
+    </section>
+
+    {% endif %}
+
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>PDFInsight · Document and Transaction Analysis</p>
+    </footer>
+
+</main>
+
+
+<!-- =====================================================
+     CHART INITIALIZATION
+====================================================== -->
+{% if results and results.get('csv_analysis') %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const csv = {{ results.get('csv_analysis', {}) | tojson }};
+
+    console.log("PDFInsight CSV analysis:", csv);
+
+    if (typeof Chart === "undefined") {
+        console.error(
+            "Chart.js could not load. Check your internet connection."
+        );
+        return;
+    }
+
+
+    // -----------------------------------------------------
+    // 1. DAILY TRANSACTION AMOUNT
+    // -----------------------------------------------------
+    const dailyCanvas = document.getElementById("dailyChart");
+
+    const dailyLabels = csv.daily_chart_labels || [];
+    const dailyValues = csv.daily_chart_values || [];
+
+    if (
+        dailyCanvas &&
+        dailyLabels.length > 0 &&
+        dailyValues.length > 0
+    ) {
+
+        new Chart(dailyCanvas, {
+            type: "line",
+
+            data: {
+                labels: dailyLabels,
+
+                datasets: [{
+                    label: "Daily Transaction Amount",
+                    data: dailyValues,
+
+                    borderColor: "#4776e6",
+                    backgroundColor: "rgba(71, 118, 230, 0.12)",
+
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+    } else {
+        console.warn(
+            "Daily chart: canvas or chart data is missing.",
+            dailyLabels,
+            dailyValues
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // 2. TRANSACTION TYPE BREAKDOWN
+    // -----------------------------------------------------
+    const typeCanvas =
+        document.getElementById("transactionTypeChart");
+
+    const typeLabels = csv.type_chart_labels || [];
+    const typeValues = csv.type_chart_values || [];
+
+    if (
+        typeCanvas &&
+        typeLabels.length > 0 &&
+        typeValues.length > 0
+    ) {
+
+        new Chart(typeCanvas, {
+            type: "doughnut",
+
+            data: {
+                labels: typeLabels,
+
+                datasets: [{
+                    label: "Transaction Count",
+                    data: typeValues,
+                    borderWidth: 2,
+                    hoverOffset: 8
+                }]
+            },
+
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        position: "bottom"
+                    }
+                }
+            }
+        });
+
+    } else {
+        console.warn(
+            "Transaction type chart: canvas or chart data is missing.",
+            typeLabels,
+            typeValues
+        );
+    }
+
+
+    // -----------------------------------------------------
+    // 3. TOP 10 MERCHANTS
+    // -----------------------------------------------------
+    const merchantCanvas =
+        document.getElementById("topMerchantsChart");
+
+    const merchantLabels = csv.merchant_chart_labels || [];
+    const merchantValues = csv.merchant_chart_values || [];
+
+    if (
+        merchantCanvas &&
+        merchantLabels.length > 0 &&
+        merchantValues.length > 0
+    ) {
+
+        new Chart(merchantCanvas, {
+            type: "bar",
+
+            data: {
+                labels: merchantLabels,
+
+                datasets: [{
+                    label: "Number of Transactions",
+                    data: merchantValues,
+
+                    backgroundColor: "#4776e6",
+                    borderRadius: 6,
+                    maxBarThickness: 32
+                }]
+            },
+
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                },
+
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+    } else {
+        console.warn(
+            "Merchant chart: canvas or chart data is missing.",
+            merchantLabels,
+            merchantValues
+        );
+    }
+
+});
+</script>
+
+{% endif %}
+
+</body>
+</html>
